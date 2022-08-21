@@ -31,6 +31,12 @@ float phi;    //Dimensional axis
 float theta;
 float psi;
 
+int wait = 200, lastTime = -wait; //detect double press
+
+float neutralPhi = 0;
+float neutralTheta = 0;
+float neutralPsi = 0; //neutral orientation
+
 void setup() 
 { 
   oscP5 = new OscP5(this, 55555);
@@ -61,9 +67,9 @@ void oscEvent(OscMessage theOscMessage) {
   String[] values = split(theOscMessage.get(2).stringValue(), ",");
   if(values.length == 3)
   {
-    phi = float(values[0]);
-    theta = float(values[1]); 
-    psi = float(values[2]);
+    phi = float(values[0]) - neutralPhi;
+    theta = float(values[1]) - neutralTheta; 
+    psi = float(values[2]) - neutralPsi;
   }
 }
 
@@ -138,10 +144,10 @@ void Compass()
   fill(255); 
   textSize(60); 
   textAlign(CENTER); 
-  text("L", -375, 0, 100, 80); 
-  text("R", 370, 0, 100, 80); 
-  text("16", 0, -365, 100, 80); 
-  text("34", 0, 375, 100, 80); 
+  text("270", -375, 0, 100, 80); 
+  text("90", 370, 0, 100, 80); 
+  text("0", 0, -365, 100, 80); 
+  text("180", 0, 375, 100, 80); 
   textSize(30); 
   text("COMPASS", 0, -130, 500, 80); 
   rotate(PI/4); 
@@ -155,7 +161,7 @@ void Compass()
 }
 void CompassPointer() 
 { 
-  rotate(PI+radians(Azimuth)-radians(160));  
+  rotate(PI+radians(Azimuth));  
   stroke(0); 
   strokeWeight(4); 
   fill(100, 255, 100); 
@@ -167,7 +173,7 @@ void CompassPointer()
   ellipse(0, 0, 10, 10); 
   triangle(-20, -213, 20, -213, 0, -190); 
   triangle(-15, -215, 15, -215, 0, -200); 
-  rotate(-PI-radians(Azimuth)+radians(160)); 
+  rotate(-PI-radians(Azimuth)); 
 }
 void Plane() 
 { 
@@ -310,4 +316,19 @@ void PitchScale()
       line(25, 50*i, -25, 50*i); 
     } 
   } 
+}
+
+void mousePressed() {
+  if(lastTime + wait > millis()) {
+    neutralPhi = phi;
+    neutralTheta = theta;
+    neutralPsi = psi;
+    println("Double pressed",millis());
+    println("phi:",phi);
+    println("theta:",theta);
+    println("psi:",psi);
+    
+    } else {
+    lastTime = millis();
+  }
 }
