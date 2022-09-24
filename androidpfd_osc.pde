@@ -2,8 +2,10 @@ import org.firmata.*;
 import cc.arduino.*;
 
 import oscP5.*;
+import netP5.*;
 
 OscP5 oscP5;
+NetAddress receiver;
 
 
 //variables
@@ -30,18 +32,21 @@ PVector v1, v2;
 float phi;    //Dimensional axis
 float theta;
 float psi;
+float nphi;
+float ntheta;
+float npsi;
 
-int wait = 100, lastTime = -wait; //detect double press
+int wait = 150, lastTime = -wait; //detect double press
 
 void setup() 
 { 
   oscP5 = new OscP5(this, 55555);
-  receiver = new NetAddress("192.168.0.1", 55555);
   fullScreen(); 
   rectMode(CENTER); 
   smooth(); 
   strokeCap(SQUARE);//Optional 
   orientation(LANDSCAPE);
+  receiver = new NetAddress("192.168.0.1", 55555);
 }
 void draw() 
 { 
@@ -322,10 +327,17 @@ void mousePressed() {
     println("theta:",theta);
     println("psi:",psi);
     
-    OscMessage msg = new OscMessage("/neutral");
-    msg.add(phi);
-    msg.add(theta);
-    msg.add(psi);
+
+    
+    OscMessage msg = new OscMessage("/bind/values");
+    msg.add(0);
+    msg.add(0.0);
+    String neutraldata = Float.toString(phi+nphi) + "," + Float.toString(theta+ntheta) + "," + Float.toString(psi+npsi);
+    delay(1);
+    nphi += phi;
+    ntheta += theta;
+    npsi += psi;
+    msg.add(neutraldata);
     oscP5.send(msg, receiver);
     println(msg);
 
