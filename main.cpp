@@ -44,9 +44,10 @@ const IPAddress subnet(255, 255, 255, 0);
 #include "ANTPLUS.h"
 #include "SparkFun_BNO080_Arduino_Library.h"
 String wifidata = "";
-String neutraldata = "";
+String neutraldata = "0.00,0.00,0.00";
 int i;
 float f;
+
 const uint8_t NETWORK_KEY[] = {0xB9, 0xA5, 0x21, 0xFB, 0xBD, 0x72, 0xC3, 0x45}; // get this from thisisant.com
 #define CHANNEL_0 0
 #define CHANNEL_1 1
@@ -74,8 +75,6 @@ void powerOnlyDataPageHandler(BicyclePowerStandardPowerOnly &msg, uintptr_t data
 }
 
 #define ss Serial1
-
-float ROLL, PITCH, YAW;
 
 void writeFile(fs::FS &fs, String path, String message)
 {
@@ -243,7 +242,7 @@ void kaho(void *arg)
     }
     // Serial.println(fname);
     writeFile(SD, fname, "");
-    appendFile(SD, fname, "time,latitude,longitude,cadence,power,altitude,airspeed,speedmeter[500ms],w,x,y,z,roll,pitch,yaw\n");
+    appendFile(SD, fname, "time,latitude,longitude,cadence,power,altitude,airspeed,speedmeter[500ms],w,x,y,z,roll,pitch,yaw,nroll,npitch,nyaw\n");
     while (1)
     {
       String str = "";
@@ -283,9 +282,16 @@ void kaho(void *arg)
         double y;
         double z;
         double w;
-        double roll;
-        double pitch;
-        double yaw;
+        float roll;
+        float pitch;
+        float yaw;
+        float nroll;
+        float npitch;
+        float nyaw;
+        float sroll = roll - nroll;
+        float spitch = pitch - npitch;
+        float syaw = yaw - nyaw;
+
         if (myIMU.dataAvailable() == true)
         {
           x = myIMU.getQuatI();
@@ -321,11 +327,22 @@ void kaho(void *arg)
         }
         router.loop();
 
-        String vec = hms + "," + String(cad) + "," + String(power) + "," + String(distance, 2) + "," + String(air, 2) + "," + String(count) + "," + String(w, 8) + "," + String(x, 8) + "," + String(y, 8) + "," + String(z, 8) + "," + String(roll, 3) + "," + String(pitch, 3) + "," + String(yaw, 3) + "\n";
+        String vec = hms + "," + String(cad) + "," + String(power) + "," + String(distance, 2) + "," + String(air, 2) + "," + String(count) + "," + String(w, 8) + "," + String(x, 8) + "," + String(y, 8) + "," + String(z, 8) + "," + String(roll, 3) + "," + String(pitch, 3) + "," + String(yaw, 3) + "," + String(sroll, 3) + "," + String(spitch, 3) + "," + String(syaw, 3) + "\n";
         //Serial.println(vec);
         str += vec;
-        wifidata = String(roll, 2) + "," + String(pitch, 2) + "," + String(yaw, 2);
-        // delay(10);
+        wifidata = String(sroll, 2) + "," + String(spitch, 2) + "," + String(syaw, 2);
+        // 文字列分割処理
+        char Buf[30];
+        neutraldata.toCharArray(Buf,50);
+        char delim[] = ",";
+        char *token;
+        token = strtok(Buf, delim);
+        nroll = atof(token);
+        token = strtok(NULL, delim);
+        npitch = atof(token);
+        token = strtok(NULL, delim);
+        nyaw = atof(token);
+
       }
       appendFile(SD, fname, str);
     }
@@ -382,7 +399,4 @@ void setup()
 void loop()
 {
   OscWiFi.update();
-  if (neutraldata != ""){
-    Serial.println(neutraldata);
-  }
 }
