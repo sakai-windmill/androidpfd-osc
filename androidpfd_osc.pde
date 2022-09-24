@@ -31,15 +31,7 @@ float phi;    //Dimensional axis
 float theta;
 float psi;
 
-float originalPhi;
-float originalTheta;
-float originalPsi;
 
-int wait = 100, lastTime = -wait; //detect double press
-
-float neutralPhi = 0;
-float neutralTheta = 0;
-float neutralPsi = 0; //neutral orientation
 
 void setup() 
 { 
@@ -71,12 +63,9 @@ void oscEvent(OscMessage theOscMessage) {
   String[] values = split(theOscMessage.get(2).stringValue(), ",");
   if(values.length == 3)
   {
-    originalPhi = float(values[0]);
-    originalTheta = float(values[1]); 
-    originalPsi = float(values[2]);
-    phi = originalPhi - neutralPhi;
-    theta = originalTheta - neutralTheta; 
-    psi = originalPsi - neutralPsi;
+    phi = float(values[0]);
+    theta = float(values[1]); 
+    psi = float(values[2]);
 
   }
 }
@@ -326,17 +315,3 @@ void PitchScale()
   } 
 }
 
-void mousePressed() {
-  if(lastTime + wait > millis()) {
-    neutralPhi = originalPhi;
-    neutralTheta = originalTheta;
-    neutralPsi = originalPsi;
-    println("Double pressed",millis());
-    println("phi:",phi);
-    println("theta:",theta);
-    println("psi:",psi);
-    
-    } else {
-    lastTime = millis();
-  }
-}
